@@ -1,0 +1,29 @@
+{
+  "name": "react-element-edge",
+  "version": "0.0.1",
+  "description": "A very basic React-related playground to boost your way of experimenting things",
+  "main": "index.js",
+  "scripts": {
+    "start": "webpack-dev-server --config webpack-dev-conf.js --progress --inline --colors",
+    "build": "webpack --config webpack-dev-conf.js --watch"
+  },
+  "author": "chrisHchen",
+  "license": "MIT",
+  "dependencies": {
+    "prop-types": "^15.6.0",
+    "react": "^16.2.0",
+    "react-dom": "^16.2.0"
+  },
+  "devDependencies": {
+    "babel-core": "^6.25.0",
+    "babel-loader": "^7.0.0",
+    "babel-plugin-transform-decorators-legacy": "^1.3.4",
+    "babel-plugin-transform-runtime": "^6.23.0",
+    "babel-preset-es2015": "^6.24.1",
+    "babel-preset-react": "^6.24.1",
+    "babel-preset-stage-0": "^6.24.1",
+    "react-hot-loader": "^1.3.1",
+    "webpack": "^3.0.0",
+    "webpack-dev-server": "^2.5.0"
+  }
+}
