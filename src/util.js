@@ -27,14 +27,19 @@ export const isIdsUnique = (nodes) => {
 
 export const getElementPosition = (dom, node) => {
   // console.log(dom.offsetWidth, dom.offsetHeight)
+  const obj = {}
   const width = dom.offsetWidth
   const height = dom.offsetHeight
   const {
     marginLeft,
     marginTop
   } = getMargin(dom)
-
-  const obj = {
+  
+  obj.size = {
+    width,
+    height
+  }
+  obj.anchor = {
     top: {
       x: marginLeft + node.x + width / 2,
       y: marginTop + node.y,
@@ -52,19 +57,33 @@ export const getElementPosition = (dom, node) => {
       y: marginTop + node.y + height / 2
     }
   }
+  obj.vertex = {
+    tl: {
+      x: marginLeft + node.x,
+      y: marginTop + node.y
+    },
+    tr: {
+      x: marginLeft + node.x + width,
+      y: marginTop + node.y
+    },
+    br: {
+      x: marginLeft + node.x + width,
+      y: marginTop + node.y + height
+    },
+    bl: {
+      x: marginLeft + node.x,
+      y: marginTop + node.y + height
+    }
+  }
 
   return obj
 }
 
-export const findShortest = (edge, store) => {
-  let {
-    source,
-    target,
-  } = edge
+export const findShortest = (source, target) => {
+
   let shortest = 0
   const shortestObj = {}
-  source = store[source]
-  target = store[target]
+
   for (let i of Object.keys(source)){
     for (let j of Object.keys(target)){
       const d = distance(source[i], target[j])
@@ -75,7 +94,7 @@ export const findShortest = (edge, store) => {
       }
     }
   }
-  // console.log(shortestObj)
+
   return shortestObj
 }
 

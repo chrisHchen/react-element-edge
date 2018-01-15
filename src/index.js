@@ -1,7 +1,7 @@
 import React, {Component} from 'react';
 import ReactDOM from 'react-dom';
-
-const DEFAULT_COLOR = '#eee'
+import debounce from 'lodash/debounce';
+const DEFAULT_COLOR = '#999';
 
 import {
   validateId,
@@ -17,6 +17,7 @@ export default class ReactElementEdge extends Component{
     this.ctx = null
     this.width = null
     this.height = null
+    this.resizeHandler = debounce(this.resizeHandler, 300)
   }
 
   componentWillMount(){
@@ -24,33 +25,47 @@ export default class ReactElementEdge extends Component{
   }
 
   componentDidMount(){
-    this.getCtx()
+    this.getCtx(this.props)
+    this.updatePosition(this.props)
+    window.addEventListener('resize', this.resizeHandler)
+  }
+
+  componentWillReceiveProps(nextProps) {
+    this.getCtx(nextProps)
+    validateId(nextProps.node)
+  }
+
+  componentDidUpdate(){
     this.updatePosition(this.props)
   }
 
-  componentWillUnmount(){
+  componentWillUnmount() {
+    window.removeEventListener('resize', this.resizeHandler)
     this.store = null
     this.ctx = null
     this.width = null
     this.height = null
   }
 
-  componentWillReceiveProps(nextProps) {
-    validateId(nextProps.node)
-    this.updatePosition(nextProps)
+  resizeHandler = () => {
+    this.getCtx(this.props)
+    this.updatePosition(this.props)
   }
 
-  getCtx = () => {
-    const canvas = document.getElementById(this.props.id);
-    canvas.width = this.width = this.wrap.clientWidth
-    canvas.height = this.height = this.wrap.clientHeight
-    this.ctx = canvas.getContext('2d');
+  getCtx = (p) => {
+    const canvas = document.getElementById(p.id)
+    canvas.width = this.width = p.width || this.wrap.clientWidth
+    canvas.height = this.height = p.height || this.wrap.clientHeight
+    this.ctx = canvas.getContext('2d')
   }
 
   updatePosition = (p) => {
     const {
       node,
+      onUpdate
     } = p
+    this.store = {};
+    if (!node) return
     node.forEach(n => {
       const dom = ReactDOM.findDOMNode(this[n.id])
       const {
@@ -63,6 +78,9 @@ export default class ReactElementEdge extends Component{
       this.store[n.id] = getElementPosition(dom, n)
       // console.log(this.store)
     })
+    if (typeof onUpdate === 'function'){
+      onUpdate(this.store)
+    }
     this.drawEdge(p);
   }
 
@@ -70,14 +88,19 @@ export default class ReactElementEdge extends Component{
     const {
       edge,
     } = p
+    if (!edge) return
     this.ctx.clearRect(0, 0, this.width, this.height);
     edge.forEach(ed => {
+      const s = this.store[ed.source]
+      const t = this.store[ed.target]
+      if (!s || !t) return
       const {
         source,
         target
-      } = findShortest(ed, this.store)
+      } = findShortest(s.anchor, t.anchor)
       this.ctx.beginPath();
       this.ctx.strokeStyle = ed.color || DEFAULT_COLOR
+      this.ctx.lineWidth = 1
       this.ctx.moveTo(source.x, source.y);
       this.ctx.lineTo(target.x, target.y);
       this.ctx.stroke();
@@ -90,10 +113,30 @@ export default class ReactElementEdge extends Component{
       node,
     } = this.props
     return node.map((d, index) => {
-      const Comp = d.ele || <div/>
-      const id = d.id
-      return <Comp key={index} ref={el => this[id] = el}></Comp>
+      const {
+        ele : CompOrElement,
+        id,
+        x,
+        y,
+        ...rest
+      } = d
+      if (React.isValidElement(CompOrElement)){
+        return React.cloneElement(CompOrElement, {
+          ref: el => this[d.id] = el,
+          key: d.id,
+          ...rest
+        })
+      } else if (typeof CompOrElement === "function" &&
+        !!CompOrElement.prototype.render){
+        return <CompOrElement key={d.id} ref={el => this[d.id] = el} {...rest}/>
+      } else {
+        return <div/>
+      }
     })
+  }
+
+  getData(){
+    return this.store
   }
 
   render(){
