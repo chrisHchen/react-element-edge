@@ -1,3 +1,4 @@
-import ReactElementEdge from './edge'
+import ReactElementEdge from './edge';
 
-export default ReactElementEdge
+export default ReactElementEdge;
+
